@@ -1,0 +1,67 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column; /* stack for mobile */
+  align-items: center;
+  background: #f4f4f4;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1000px; /* cap width on large screens */
+  margin: 0 auto;
+  padding: 10px;
+}
+
+@media(min-width: 768px) {
+  .container {
+    flex-direction: row; /* side by side on tablets/desktops */
+    justify-content: space-between;
+  }
+}
+
+#clickArea {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px;
+}
+
+#clickBtn {
+  width: 50vw;       /* scale with screen width */
+  max-width: 300px;
+  height: 50vw;
+  max-height: 300px;
+  font-size: 5vw;    /* scale font with screen */
+  border-radius: 50%;
+}
+
+.shop {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
+
+.shop .upgrade, .shop .rebirth {
+  width: 90%;
+  max-width: 250px;
+  margin: 10px 0;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #fff;
+  cursor: pointer;
+}
+
+.shop .upgrade.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
