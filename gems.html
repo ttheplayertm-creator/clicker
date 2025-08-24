@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gem Mine 💎</title>
+  <style>
+    body { font-family: Arial; background: #eef; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;}
+    h1 { margin-bottom: 10px; }
+    #gems { font-size: 24px; margin: 10px 0; }
+    .upgrade { margin: 10px; padding: 10px; border: 1px solid #333; border-radius: 8px; background:#fff; cursor:pointer; text-align:center; width:250px; }
+    .upgrade.disabled { opacity:0.5; cursor:not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Gem Mine 💎</h1>
+  <div id="gems">Gems: 0</div>
+
+  <div class="upgrade" id="upgradePerSecond">Upgrade Gems/Second (Cost: 10)</div>
+  <div class="upgrade" id="upgradeSpeed">Upgrade Generation Speed (Cost: 20)</div>
+  <div class="upgrade" id="upgradeClick">Upgrade Cake Click (+1 per click) (Cost: 50)</div>
+
+  <div style="margin-top:20px;">
+    <button id="backBtn">Back to Cake Clicker 🎂</button>
+  </div>
+
+  <script>
+    let gems = parseInt(localStorage.getItem("gems")) || 0;
+    let gemsPerSecond = parseInt(localStorage.getItem("gemsPerSecond")) || 1;
+    let intervalTime = parseInt(localStorage.getItem("intervalTime")) || 1000;
+
+    let perSecondCost = 10;
+    let speedCost = 20;
+    let clickCost = 50;
+
+    const gemsEl = document.getElementById("gems");
+    const upgradePerSecondBtn = document.getElementById("upgradePerSecond");
+    const upgradeSpeedBtn = document.getElementById("upgradeSpeed");
+    const upgradeClickBtn = document.getElementById("upgradeClick");
+    const backBtn = document.getElementById("backBtn");
+
+    function updateUI() {
+      gemsEl.textContent = "Gems: " + Math.floor(gems);
+      upgradePerSecondBtn.textContent = `Upgrade Gems/Second (Cost: ${perSecondCost})`;
+      upgradeSpeedBtn.textContent = `Upgrade Generation Speed (Cost: ${speedCost})`;
+      upgradeClickBtn.textContent = `Upgrade Cake Click (+1 per click) (Cost: ${clickCost})`;
+
+      upgradePerSecondBtn.className = "upgrade" + (gems < perSecondCost ? " disabled" : "");
+      upgradeSpeedBtn.className = "upgrade" + (gems < speedCost ? " disabled" : "");
+      upgradeClickBtn.className = "upgrade" + (gems < clickCost ? " disabled" : "");
+    }
+
+    // Gems per second upgrade
+    upgradePerSecondBtn.addEventListener("click", () => {
+      if (gems >= perSecondCost) {
+        gems -= perSecondCost;
+        gemsPerSecond += 1;
+        perSecondCost = Math.floor(perSecondCost * 1.5);
+        saveData();
+        updateUI();
+      }
+    });
+
+    // Generation speed upgrade
+    upgradeSpeedBtn.addEventListener("click", () => {
+      if (gems >= speedCost) {
+        gems -= speedCost;
+        intervalTime = Math.max(100, intervalTime * 0.9);
+        speedCost = Math.floor(speedCost * 1.7);
+        startGeneration();
+        saveData();
+        updateUI();
+      }
+    });
+
+    // Upgrade main page click
+    upgradeClickBtn.addEventListener("click", () => {
+      if (gems >= clickCost) {
+        gems -= clickCost;
+        // Store click upgrade for main page
+        let extraClick = parseInt(localStorage.getItem("extraClick")) || 0;
+        extraClick += 1;
+        localStorage.setItem("extraClick", extraClick);
+        clickCost = Math.floor(clickCost * 2);
+        saveData();
+        updateUI();
+      }
+    });
+
+    function startGeneration(){
+      if(window.genInterval) clearInterval(window.genInterval);
+      window.genInterval = setInterval(() => {
+        gems += gemsPerSecond;
+        saveData();
+        updateUI();
+      }, intervalTime);
+    }
+
+    function saveData(){
+      localStorage.setItem("gems", gems);
+      localStorage.setItem("gemsPerSecond", gemsPerSecond);
+      localStorage.setItem("intervalTime", intervalTime);
+    }
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "index.html"; // make sure your main page file is exactly "index.html"
+    });
+
+    // Start
+    updateUI();
+    startGeneration();
+  </script>
+</body>
+</html>

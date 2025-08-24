@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cake Clicker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+    }
+
+    .click-area {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #fff;
+      border-right: 2px solid #ccc;
+    }
+
+    #score {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    #clickBtn {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      font-size: 28px;
+      border: none;
+      background: #e91e63;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: transform 0.1s;
+    }
+
+    #clickBtn:active {
+      transform: scale(0.95);
+    }
+
+    .shop {
+      flex: 1;
+      padding: 20px;
+      background: #fafafa;
+      overflow-y: auto;
+    }
+
+    .shop h2 {
+      text-align: center;
+    }
+
+    .upgrade, .rebirth, .prestigeUpgrade {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: center;
+    }
+
+    .upgrade:hover, .rebirth:hover, .prestigeUpgrade:hover {
+      background: #e0e0e0;
+    }
+
+    .disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+    
+  <!-- Left: click area -->
+  <div class="click-area">
+    <div style="margin-top:20px; text-align:center;">
+  <button onclick="window.location.href='gems.html'">Go to Gem Mine 💎</button>
+</div>
+    <h1>Cake Clicker 🎂</h1>
+    <div id="score">Cakes: 0</div>
+    <div id="rebirthInfo">Rebirths: 0 | Multiplier: x1 | Points: 0</div>
+    <button id="clickBtn">🍰</button>
+  </div>
+
+  <!-- Right: shop -->
+  <div class="shop">
+    <h2>Bakery Upgrades</h2>
+    <div id="upgrades"></div>
+
+    <h2>Rebirth</h2>
+    <div id="rebirthBtn" class="rebirth disabled">
+      Rebirth (Need 10,000 cakes)<br>
+      Gain +1 Rebirth Point
+    </div>
+
+    <h2>Prestige Shop</h2>
+    <div id="prestigeUpgrades"></div>
+  </div>
+
+  <script>
+    // At the start after loading game
+let extraClick = parseInt(localStorage.getItem("extraClick")) || 0;
+
+// When clicking cake:
+document.getElementById("clickBtn").addEventListener("click", () => {
+  score += (clickPower + extraClick) * multiplier;
+  updateScore();
+});
+
+    let score = 0;
+    let clickPower = 1;
+    let autoClick = 0;
+    let rebirths = 0;
+    let multiplier = 1;
+    let prestigePoints = 0;
+
+    const scoreEl = document.getElementById("score");
+    const upgradesEl = document.getElementById("upgrades");
+    const rebirthEl = document.getElementById("rebirthBtn");
+    const rebirthInfo = document.getElementById("rebirthInfo");
+    const prestigeEl = document.getElementById("prestigeUpgrades");
+
+    const upgrades = [
+      { name: "Better Fork (+1 cake per click)", cost: 20, type: "click", value: 1 },
+      { name: "Oven (+1 cake per second)", cost: 50, type: "auto", value: 1 },
+      { name: "Golden Spoon (+5 cakes per click)", cost: 200, type: "click", value: 5 },
+      { name: "Cake Factory (+5 cakes per second)", cost: 500, type: "auto", value: 5 }
+    ];
+
+    const prestigeUpgrades = [
+      { name: "Permanent +1 click power", cost: 1, type: "permClick", value: 1, bought: 0 },
+      { name: "Permanent +1 auto per second", cost: 2, type: "permAuto", value: 1, bought: 0 },
+      { name: "Cheaper upgrades (-10% cost)", cost: 3, type: "discount", value: 0.9, bought: 0 }
+    ];
+
+    const rebirthCost = 10000;
+
+    function loadGame() {
+      const save = JSON.parse(localStorage.getItem("cakeClickerSave"));
+      if (save) {
+        score = save.score || 0;
+        clickPower = save.clickPower || 1;
+        autoClick = save.autoClick || 0;
+        rebirths = save.rebirths || 0;
+        prestigePoints = save.prestigePoints || 0;
+        prestigeUpgrades.forEach((up, i) => {
+          if (save.prestigeUpgrades && save.prestigeUpgrades[i]) {
+            up.bought = save.prestigeUpgrades[i].bought;
+          }
+        });
+        multiplier = 1 + rebirths * 0.1;
+        if (save.upgrades) {
+          save.upgrades.forEach((u, i) => {
+            if (upgrades[i]) upgrades[i].cost = u.cost;
+          });
+        }
+      }
+    }
+
+    function saveGame() {
+      const save = {
+        score,
+        clickPower,
+        autoClick,
+        rebirths,
+        prestigePoints,
+        upgrades: upgrades.map(u => ({ cost: u.cost })),
+        prestigeUpgrades: prestigeUpgrades.map(p => ({ bought: p.bought }))
+      };
+      localStorage.setItem("cakeClickerSave", JSON.stringify(save));
+    }
+
+    document.getElementById("clickBtn").addEventListener("click", () => {
+      score += clickPower * multiplier;
+      updateScore();
+    });
+
+    function renderUpgrades() {
+      upgradesEl.innerHTML = "";
+      upgrades.forEach((upg, i) => {
+        const div = document.createElement("div");
+        div.className = "upgrade" + (score < upg.cost ? " disabled" : "");
+        div.textContent = `${upg.name} (Cost: ${upg.cost})`;
+        if (score >= upg.cost) {
+          div.addEventListener("click", () => buyUpgrade(i));
+        }
+        upgradesEl.appendChild(div);
+      });
+
+      if (score >= rebirthCost) {
+        rebirthEl.classList.remove("disabled");
+        rebirthEl.onclick = doRebirth;
+      } else {
+        rebirthEl.classList.add("disabled");
+        rebirthEl.onclick = null;
+      }
+    }
+
+    function renderPrestige() {
+      prestigeEl.innerHTML = "";
+      prestigeUpgrades.forEach((upg, i) => {
+        const div = document.createElement("div");
+        div.className = "prestigeUpgrade" + (prestigePoints < upg.cost ? " disabled" : "");
+        div.textContent = `${upg.name} (Cost: ${upg.cost} pts) [Bought: ${upg.bought}]`;
+        if (prestigePoints >= upg.cost) {
+          div.addEventListener("click", () => buyPrestige(i));
+        }
+        prestigeEl.appendChild(div);
+      });
+    }
+
+    function buyUpgrade(i) {
+      const upg = upgrades[i];
+      if (score >= upg.cost) {
+        score -= upg.cost;
+        if (upg.type === "click") {
+          clickPower += upg.value;
+        } else if (upg.type === "auto") {
+          autoClick += upg.value;
+        }
+        upg.cost = Math.floor(upg.cost * 1.5);
+        updateScore();
+      }
+    }
+
+    function buyPrestige(i) {
+      const upg = prestigeUpgrades[i];
+      if (prestigePoints >= upg.cost) {
+        prestigePoints -= upg.cost;
+        upg.bought++;
+        if (upg.type === "permClick") {
+          clickPower += upg.value;
+        } else if (upg.type === "permAuto") {
+          autoClick += upg.value;
+        } else if (upg.type === "discount") {
+          upgrades.forEach(u => u.cost = Math.floor(u.cost * upg.value));
+        }
+        updateScore();
+      }
+    }
+
+    setInterval(() => {
+      score += autoClick * multiplier;
+      updateScore();
+    }, 1000);
+
+    setInterval(saveGame, 5000);
+
+    function updateScore() {
+      if (isNaN(score)) score = 0;
+      if (isNaN(clickPower)) clickPower = 1;
+      if (isNaN(autoClick)) autoClick = 0;
+
+      scoreEl.textContent = "Cakes: " + Math.floor(score);
+      rebirthInfo.textContent = `Rebirths: ${rebirths} | Multiplier: x${multiplier.toFixed(1)} | Points: ${prestigePoints}`;
+      renderUpgrades();
+      renderPrestige();
+    }
+
+    function doRebirth() {
+      if (score >= rebirthCost) {
+        rebirths++;
+        prestigePoints++;
+        multiplier = 1 + rebirths * 0.1;
+        score = 0;
+        clickPower = 1 + prestigeUpgrades[0].bought; // keep permanent bonuses
+        autoClick = prestigeUpgrades[1].bought;
+        upgrades[0].cost = 20;
+        upgrades[1].cost = 50;
+        upgrades[2].cost = 200;
+        upgrades[3].cost = 500;
+        updateScore();
+      }
+    }
+
+    loadGame();
+    updateScore();
+  </script>
+</body>
+</html>
